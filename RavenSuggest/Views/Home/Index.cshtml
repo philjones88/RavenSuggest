@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RavenSuggest - Google Like Awesomeness from RavenDB</title>
+    <link type="text/css" rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css"/>
+</head>
+
+<body>
+    
+    <h2>Suggestions</h2>
+    
+    <p>Start typing a word below (vowels feature highly in the names)</p>
+    
+    <input type="text" id="company-autocomplete" style="width:300px;" />
+
+    <h2>Scoping the suggestions</h2>
+    
+    <p>An enhancement, use data the user has already told you to improve their results and show more details.</p>
+
+    <select id="scoped-company-category">            
+        <option>Computer Hardware</option>
+        <option>Computer Software</option>
+        <option>Marketing</option>
+        <option>SEO</option>
+        <option>Accountancy</option>
+        <option>Design</option>
+        <option>Printing</option>
+        <option>Catering</option>
+        <option>Travel</option>
+        <option>Security</option>
+    </select>
+
+    <input type="text" id="scoped-company-autocomplete" style="width:300px;"  />
+    <input type="hidden" id="scoped-company-id" />
+    
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+
+    <script type="text/javascript">
+        var $company = $("#company-autocomplete");
+
+        $company.autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    url: "/Home/CompanySuggestions",
+                    dataType: "json",
+                    type: "POST",
+                    data: {
+                        term: request.term
+                    },
+                    success: function (data) {
+                        response(data);
+                    }
+                });
+            }
+        });
+
+        var $scopedCompany = $("#scoped-company-autocomplete");
+        var $scopedCompanyId = $("#scoped-company-id");
+
+        $scopedCompany.autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    url: "/Home/ScopedCompanySuggestions",
+                    dataType: "json",
+                    type: "POST",
+                    data: {
+                        term: request.term,
+                        category: $("#scoped-company-category").val()
+                    },
+                    success: function (data) {
+                        response(data);
+                    }
+                });
+            },
+            focus: function (event, ui) {
+                $scopedCompany.val(ui.item.value);
+
+                return false;
+            },
+            select: function (event, ui) {
+                $scopedCompany.val(ui.item.value);
+                $scopedCompanyId.val(ui.item.id);
+
+                return false;
+            }
+        })
+        .data("autocomplete")._renderItem = function (ul, item) {
+            return $("<li></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + item.value + "<br>" + item.description + "</a>")
+                .appendTo(ul);
+        };
+    </script>
+</body>
+</html>
