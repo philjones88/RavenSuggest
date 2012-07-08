@@ -16,11 +16,21 @@ namespace RavenSuggest.Controllers
         [HttpPost]
         public JsonResult CompanySuggestions(string term)
         {
-            var rq = RavenSession.Query<Company, Companies_QueryIndex>();
+            var rq = RavenSession.Query<Company, Companies_QueryIndex>()
+                                .Search(x => x.Name, term)
+                                .Take(5);
 
-            var ravenResults = rq.Search(x => x.Name, string.Format("*{0}*", term), escapeQueryOptions: EscapeQueryOptions.AllowAllWildcards, options: SearchOptions.And)
-                                        .Take(5)
-                                        .ToList();
+            var ravenResults = rq
+                .ToList();
+
+            if (ravenResults.Count < 5)
+            {
+                var suggestionQueryResult = rq.Suggest();
+
+                ravenResults.AddRange(RavenSession.Query<Company, Companies_QueryIndex>()
+                                          .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions))
+                                          .Take(5 - ravenResults.Count));
+            }
 
             return Json(ravenResults.Select(x => new
             {
@@ -33,12 +43,24 @@ namespace RavenSuggest.Controllers
         [HttpPost]
         public JsonResult ScopedCompanySuggestions(string term, string category)
         {
-            var rq = RavenSession.Query<Company, Companies_QueryIndex>();
 
-            var ravenResults = rq.Search(x => x.Name, string.Format("*{0}*", term), escapeQueryOptions: EscapeQueryOptions.AllowAllWildcards, options: SearchOptions.And)
-                                        .Where(x => x.Category == category)
-                                        .Take(5)
-                                        .ToList();
+            var rq = RavenSession.Query<Company, Companies_QueryIndex>()
+                    .Where(x => x.Category == category)
+                    .Search(x => x.Name, term)
+                    .Take(5);
+
+            var ravenResults = rq
+                .ToList();
+
+            if (ravenResults.Count < 5)
+            {
+                var suggestionQueryResult = rq.Suggest();
+
+                ravenResults.AddRange(RavenSession.Query<Company, Companies_QueryIndex>()
+                                .Where(x => x.Category == category)
+                                .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions))
+                                .Take(5 - ravenResults.Count));
+            }
 
             return Json(ravenResults.Select(x => new
             {
