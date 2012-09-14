@@ -7,6 +7,11 @@
 <head>
     <title>RavenSuggest - Google Like Awesomeness from RavenDB</title>
     <link type="text/css" rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css"/>
+    <style type="text/css">
+        .company-spinner,.company-scoped-spinner {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,7 +20,7 @@
     
     <p>Start typing a word below (vowels feature highly in the names)</p>
     
-    <input type="text" id="company-autocomplete" style="width:300px;" />
+    <input type="text" id="company-autocomplete" style="width:300px;" /> <img class="company-spinner" src="/Content/Images/ajax-loader.gif"/>
 
     <h2>Scoping the suggestions</h2>
     
@@ -34,7 +39,7 @@
         <option>Security</option>
     </select>
 
-    <input type="text" id="scoped-company-autocomplete" style="width:300px;"  />
+    <input type="text" id="scoped-company-autocomplete" style="width:300px;"  /> <img class="company-scoped-spinner" src="/Content/Images/ajax-loader.gif"/>
     <input type="hidden" id="scoped-company-id" />
     
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
@@ -55,8 +60,18 @@
                     },
                     success: function (data) {
                         response(data);
+                        
+                        if (data.length == 0) {
+                            $(".company-spinner").hide();
+                        }
                     }
                 });
+            },
+            search: function (event, ui) {
+                $('.company-spinner').show();
+            },
+            open: function (event, ui) {
+                $('.company-spinner').hide();
             }
         });
 
@@ -76,6 +91,10 @@
                     },
                     success: function (data) {
                         response(data);
+                        
+                        if (data.length == 0) {
+                            $(".company-scoped-spinner").hide();
+                        }
                     }
                 });
             },
@@ -89,6 +108,12 @@
                 $scopedCompanyId.val(ui.item.id);
 
                 return false;
+            },
+            search: function (event, ui) {
+                $('.company-scoped-spinner').show();
+            },
+            open: function (event, ui) {
+                $('.company-scoped-spinner').hide();
             }
         })
         .data("autocomplete")._renderItem = function (ul, item) {
