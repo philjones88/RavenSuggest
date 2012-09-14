@@ -58,7 +58,8 @@ namespace RavenSuggest.Controllers
 
                 ravenResults.AddRange(RavenSession.Query<Company, Companies_QueryIndex>()
                                 .Where(x => x.Category == category)
-                                .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions), options:SearchOptions.And)
+                                .Search(x => x.Name, string.Format("{0}*", term), escapeQueryOptions: EscapeQueryOptions.AllowPostfixWildcard, options: SearchOptions.And)
+                                .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions))
                                 .Take(5 - ravenResults.Count));
             }
 
