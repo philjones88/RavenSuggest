@@ -46,7 +46,7 @@ namespace RavenSuggest.Controllers
 
             var rq = RavenSession.Query<Company, Companies_QueryIndex>()
                     .Where(x => x.Category == category)
-                    .Search(x => x.Name, term)
+                    .Search(x => x.Name, term, options:SearchOptions.And)
                     .Take(5);
 
             var ravenResults = rq
@@ -58,7 +58,7 @@ namespace RavenSuggest.Controllers
 
                 ravenResults.AddRange(RavenSession.Query<Company, Companies_QueryIndex>()
                                 .Where(x => x.Category == category)
-                                .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions))
+                                .Search(x => x.Name, string.Join(" ", suggestionQueryResult.Suggestions), options:SearchOptions.And)
                                 .Take(5 - ravenResults.Count));
             }
 
